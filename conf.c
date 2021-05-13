@@ -377,6 +377,7 @@ check_number_of_args(char *line, int num)
 void
 CNF_Initialise(int r, int client_only)
 {
+  char * env;
   restarted = r;
 
   hwts_interfaces = ARR_CreateInstance(sizeof (CNF_HwTsInterface));
@@ -403,8 +404,18 @@ CNF_Initialise(int r, int client_only)
   if (client_only) {
     cmd_port = ntp_port = 0;
   } else {
-    bind_cmd_path = Strdup(DEFAULT_COMMAND_SOCKET);
-    pidfile = Strdup(DEFAULT_PID_FILE);
+    env = getenv("CHRONY_COMMAND_SOCKET");
+    if (env) {
+      bind_cmd_path = Strdup(env);
+    } else {
+      bind_cmd_path = Strdup(DEFAULT_COMMAND_SOCKET);
+    }
+    env = getenv("CHRONY_PID_FILE");
+    if (env) {
+      pidfile = Strdup(env);
+    } else {
+      pidfile = Strdup(DEFAULT_PID_FILE);
+    }
   }
 
   SCK_GetAnyLocalIPAddress(IPADDR_INET4, &bind_address4);
