@@ -43,14 +43,25 @@ parts:
   chrony:
     plugin: autotools
     source: .
-    autotools-configure-parameters:
-      - --prefix=/usr
-      - --without-pwnam
-      - --sysconfdir=/var/snap/${SNAPCRAFT_PROJECT_NAME}/common/etc/chrony
-      - --localstatedir=/var/snap/${SNAPCRAFT_PROJECT_NAME}/common/var
-      - --chronyvardir=/var/snap/${SNAPCRAFT_PROJECT_NAME}/common/var/lib/chrony
     override-build: |
-      snapcraftctl build
+      # to support cross build, CC need to be passed as env variable
+      # handle build manually
+      if [ "${SNAPCRAFT_TARGET_ARCH}" = "armhf" ]; then
+        export CC=arm-linux-gnueabihf-gcc
+      elif [ "${SNAPCRAFT_TARGET_ARCH}" = "arm64" ]; then
+        export CC=aarch64-linux-gnu-gcc
+      elif [ "${SNAPCRAFT_TARGET_ARCH}" = "amd64" ]; then
+        export CC=x86_64-linux-gnu-gcc
+      fi
+      ./configure \
+        --prefix=/usr \
+        --without-pwnam \
+        --sysconfdir=/var/snap/${SNAPCRAFT_PROJECT_NAME}/common/etc/chrony \
+        --localstatedir=/var/snap/${SNAPCRAFT_PROJECT_NAME}/common/var \
+        --chronyvardir=/var/snap/${SNAPCRAFT_PROJECT_NAME}/common/var/lib/chrony \
+        --host-machine=${SNAPCRAFT_TARGET_ARCH}
+      make -j"${SNAPCRAFT_PARALLEL_BUILD_COUNT}"
+      make install DESTDIR="${SNAPCRAFT_PART_INSTALL}"
       mkdir -p ${SNAPCRAFT_PART_INSTALL}/usr/share/chrony
       install -m 644 -T\
               examples/chrony.conf.example2 \
