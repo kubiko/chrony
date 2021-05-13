@@ -1,0 +1,64 @@
+name: chrony
+base: core20
+summary: Chrony Network Time Protocol
+description: |
+  chrony is a versatile implementation of the Network Time Protocol (NTP).
+  It can synchronise the system clock with NTP servers, reference clocks
+  (e.g. GPS receiver), and manual input using wristwatch and keyboard.
+  It can also operate as an NTPv4 (RFC 5905) server and peer to provide
+  a time service to other computers in the network.
+
+architectures:
+    - build-on: armhf
+    - build-on: arm64
+    - build-on: amd64
+
+adopt-info: chrony
+grade: stable
+confinement: strict
+
+environment:
+  CHRONY_PID_FILE: $SNAP_DATA/run/chrony/chronyd.pid
+  CHRONY_COMMAND_SOCKET: $SNAP_DATA/run/chrony/chronyd.sock
+
+apps:
+  chronyd:
+    command: usr/sbin/chronyd -U -d -f $SNAP_COMMON/etc/chrony/chrony.conf
+    adapter: none
+    daemon: simple
+    restart-condition: on-failure
+    plugs:
+      - network
+      - network-bind
+      - time-control
+      - timeserver-control
+  chronyc:
+    command: usr/bin/chronyc
+    adapter: none
+    plugs:
+      - network
+      - network-bind
+
+parts:
+  chrony:
+    plugin: autotools
+    source: .
+    autotools-configure-parameters:
+      - --prefix=/usr
+      - --without-pwnam
+      - --sysconfdir=/var/snap/${SNAPCRAFT_PROJECT_NAME}/common/etc/chrony
+      - --localstatedir=/var/snap/${SNAPCRAFT_PROJECT_NAME}/common/var
+      - --chronyvardir=/var/snap/${SNAPCRAFT_PROJECT_NAME}/common/var/lib/chrony
+    override-build: |
+      snapcraftctl build
+      mkdir -p ${SNAPCRAFT_PART_INSTALL}/usr/share/chrony
+      install -m 644 -T\
+              examples/chrony.conf.example2 \
+              ${SNAPCRAFT_PART_INSTALL}/usr/share/chrony/chrony.conf
+      install -m 640 -T\
+              examples/chrony.keys.example \
+              ${SNAPCRAFT_PART_INSTALL}/usr/share/chrony/chrony.keys
+      snapcraftctl set-version $(git describe --tags)
+
+build-packages:
+    - asciidoctor
