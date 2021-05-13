@@ -1,0 +1,19 @@
+#!/bin/bash
+mkdir -p ${SNAP_COMMON}/etc/chrony
+mkdir -p ${SNAP_COMMON}/var/lib/chrony
+mkdir -p ${SNAP_COMMON}/var/log/chrony
+
+for conf in chrony.keys chrony.conf
+do
+  cp ${SNAP}/usr/share/chrony/${conf} \
+     ${SNAP_COMMON}/etc/chrony
+done
+
+sed -i \
+    -e 's| /etc/chrony/| '"${SNAP_COMMON}"'/etc/chrony/|g' \
+    -e 's| /var/lib/chrony| '"${SNAP_COMMON}"'/var/lib/chrony|g' \
+    -e 's| /var/log/chrony| '"${SNAP_COMMON}"'/var/log/chrony|g' \
+    ${SNAP_COMMON}/etc/chrony/chrony.conf
+
+# disable the service till plugs are connected
+snapctl stop --disable ${SNAP_INSTANCE_NAME}.chronyd

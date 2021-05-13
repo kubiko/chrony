@@ -1,0 +1,7 @@
+#!/bin/sh
+
+if snapctl is-connected time-control && snapctl is-connected timeserver-control; then
+  # plugs are connected, wee can start the daemon
+  snapctl start --enable ${SNAP_INSTANCE_NAME}.chronyd
+fi
+
