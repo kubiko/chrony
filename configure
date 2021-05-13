@@ -124,6 +124,7 @@ For better control, use the options below.
   --disable-rtc          Don't include RTC even on Linux
   --disable-privdrop     Disable support for dropping root privileges
   --without-libcap       Don't use libcap even if it is available
+  --without-pwnam        Don't use pwnam
   --enable-scfilter      Enable support for system call filtering
   --without-seccomp      Don't use seccomp even if it is available
   --disable-asyncdns     Disable asynchronous name resolving
@@ -232,6 +233,7 @@ feat_rtc=1
 try_rtc=0
 feat_droproot=1
 try_libcap=-1
+pwnam=1
 try_clockctl=0
 feat_scfilter=0
 try_seccomp=-1
@@ -328,6 +330,9 @@ do
     ;;
     --without-libcap|--disable-linuxcaps)
       try_libcap=0
+    ;;
+    --without-pwnam)
+      pwnam=0
     ;;
     --enable-scfilter)
       feat_scfilter=1
@@ -653,6 +658,10 @@ then
       add_def HAVE_IN6_PKTINFO
     fi
   fi
+fi
+
+if [ $pwnam = "1" ]; then
+  add_def PWNAM
 fi
 
 if ! test_code 'O_NOFOLLOW flag' 'sys/types.h sys/stat.h fcntl.h' '' "$LIBS" \
