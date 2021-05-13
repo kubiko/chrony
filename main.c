@@ -433,7 +433,9 @@ int main
   const char *conf_file = DEFAULT_CONF_FILE;
   const char *progname = argv[0];
   char *user = NULL, *log_file = NULL;
+#ifdef PWNAM
   struct passwd *pw;
+#endif
   int opt, debug = 0, nofork = 0, address_family = IPADDR_UNSPEC;
   int do_init_rtc = 0, restarted = 0, client_only = 0, timeout = -1;
   int scfilter_level = 0, lock_memory = 0, sched_priority = 0;
@@ -583,12 +585,17 @@ int main
   if (!user)
     user = CNF_GetUser();
 
+#ifdef PWNAM
   pw = getpwnam(user);
   if (!pw)
     LOG_FATAL("Could not get user/group ID of %s", user);
 
   /* Create directories for sockets, log files, and dump files */
   CNF_CreateDirs(pw->pw_uid, pw->pw_gid);
+#else
+  /* Create directories for sockets, log files, and dump files */
+  CNF_CreateDirs(0, 0);
+#endif
 
   /* Write our pidfile to prevent other instances from running */
   write_pidfile();
@@ -598,8 +605,14 @@ int main
   SCH_Initialise();
   SCK_Initialise(address_family);
 
+
+#ifdef PWNAM
   /* Start helper processes if needed */
   NKS_PreInitialise(pw->pw_uid, pw->pw_gid, scfilter_level);
+#else
+  /* Start helper processes if needed */
+  NKS_PreInitialise(0, 0, scfilter_level);
+#endif
 
   SYS_Initialise(clock_control);
   RTC_Initialise(do_init_rtc);
@@ -625,12 +638,14 @@ int main
     SYS_LockMemory();
   }
 
+#ifdef PWNAM
   /* Drop root privileges if the specified user has a non-zero UID */
   if (!geteuid() && (pw->pw_uid || pw->pw_gid))
     SYS_DropRoot(pw->pw_uid, pw->pw_gid, SYS_MAIN_PROCESS);
 
   if (!geteuid())
     LOG(LOGS_WARN, "Running with root privileges");
+#endif
 
   REF_Initialise();
   SST_Initialise();
