@@ -3504,6 +3504,7 @@ main(int argc, char **argv)
   char *line;
   const char *progname = argv[0];
   const char *hostnames = NULL;
+  const char *command_socket;
   int opt, ret = 1, multi = 0, family = IPADDR_UNSPEC;
   int port = DEFAULT_CANDM_PORT;
 
@@ -3574,7 +3575,12 @@ main(int argc, char **argv)
   DNS_SetAddressFamily(family);
 
   if (!hostnames) {
-    hostnames = DEFAULT_COMMAND_SOCKET",127.0.0.1,::1";
+    command_socket = getenv("CHRONY_COMMAND_SOCKET");
+    if (command_socket) {
+      hostnames = command_socket;
+    } else {
+      hostnames = DEFAULT_COMMAND_SOCKET",127.0.0.1,::1";
+    }
   }
 
   UTI_SetQuitSignalsHandler(signal_handler, 0);
