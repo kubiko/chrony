@@ -46,13 +46,7 @@ parts:
     override-build: |
       # to support cross build, CC need to be passed as env variable
       # handle build manually
-      if [ "${SNAPCRAFT_TARGET_ARCH}" = "armhf" ]; then
-        export CC=arm-linux-gnueabihf-gcc
-      elif [ "${SNAPCRAFT_TARGET_ARCH}" = "arm64" ]; then
-        export CC=aarch64-linux-gnu-gcc
-      elif [ "${SNAPCRAFT_TARGET_ARCH}" = "amd64" ]; then
-        export CC=x86_64-linux-gnu-gcc
-      fi
+      export CC=${SNAPCRAFT_ARCH_TRIPLET}-gcc
       ./configure \
         --prefix=/usr \
         --without-pwnam \
